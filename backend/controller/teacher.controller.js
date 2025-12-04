@@ -1,10 +1,17 @@
 import db from "../config/dbconnection.js";
-import teacher_Router from "../routes/teacher.routes.js";
+import { removeImg } from "../utils/removeimg.js";
+
 export const addTeacher = async (req, res, next) => {
   try {
     const { name, email, phone, position } = req.body;
+
     if (!name || !email || !phone || !position) {
-      return res.status(400).json({ message: "ALL fields are required" });
+      if (req.file) {
+        removeImg(req.file.path);
+      }
+      res.json({
+        message: "ALL fields are required",
+      });
     }
     // check first email
     const [exciting] = await db.execute(
@@ -12,6 +19,10 @@ export const addTeacher = async (req, res, next) => {
       [email]
     );
     if (exciting.length > 0) {
+      if (req.file) {
+        removeImg(req.file.path);
+      }
+
       return res.status(409).json({
         message: "EMAIL ALREADY EXITS. USE ANOTHER EMAIL.",
       });
@@ -22,15 +33,20 @@ export const addTeacher = async (req, res, next) => {
       [phone]
     );
     if (phmatch.length > 0) {
+      if (req.file) {
+        removeImg(req.file.path);
+      }
       return res.status(409).json({
         message: "phone ALREADY EXITS. USE ANOTHER phone.",
       });
     }
 
+    const img = req.file ? `uploads/teacher/${req.file.filename}` : null;
+
     // insert teacher
     await db.execute(
-      "INSERT INTO teacher(name,email,phone,position)VALUES(?,?,?,?)",
-      [name, email, phone, position]
+      "INSERT INTO teacher(name,email,phone,position,img)VALUES(?,?,?,?,?)",
+      [name, email, phone, position, img]
     );
     return res.status(201).json({
       message: "teacher added succesfull",
@@ -108,11 +124,13 @@ export const updateTeacher = async (req, res, next) => {
         });
       }
     }
+    // get image path if uploaded
+    const imagePath = req.file ? `uploads/teacher/${req.file.filename}` : null;
 
     // Update teacher
     await db.execute(
       "UPDATE teacher SET name = ?, email = ?, phone = ?, position = ? WHERE id = ?",
-      [updatedName, updatedEmail, updatedPhone, updatedPosition, id]
+      [updatedName, updatedEmail, updatedPhone, updatedPosition, imagePath, id]
     );
 
     return res.status(200).json({

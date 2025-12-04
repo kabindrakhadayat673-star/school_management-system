@@ -139,7 +139,7 @@ const TeacherDash = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                ID
+                IMAGE
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Name
@@ -163,7 +163,11 @@ const TeacherDash = () => {
             {teachers.map((teacher) => (
               <tr key={teacher.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm text-gray-800">
-                  {teacher.id}
+                  <img
+                    src={`${import.meta.env.VITE_IMG_URL}${teacher.img}`}
+                    alt={teacher.img ? teacher.name : "No Image"}
+                    className="w-12 h-12 object-cover"
+                  />
                 </td>
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
                   {teacher.name}

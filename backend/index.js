@@ -12,6 +12,8 @@ const app = express();
 app.use(cookieparser());
 // TO PARSE JSON REQUEST BODIES
 app.use(express.json());
+// Server uploaded files statically
+app.use("/uploads", express.static("uploads"));
 app.use(
   cors({
     origin: "http://localhost:5173",
