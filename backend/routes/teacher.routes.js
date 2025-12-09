@@ -17,6 +17,11 @@ teacher_Router.post(
 );
 teacher_Router.get("/get-teacher", islogin, getALLTeachers);
 teacher_Router.delete("/delete-teacher/:id", islogin, deleteTeacher);
-teacher_Router.patch("/update/:id", islogin, updateTeacher);
+teacher_Router.patch(
+  "/update/:id",
+  islogin,
+  upload.single("image"),
+  updateTeacher
+);
 
 export default teacher_Router;

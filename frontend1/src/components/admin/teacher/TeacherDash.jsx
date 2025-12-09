@@ -7,12 +7,14 @@ import {
 } from "../../../redux/features/teacherSlice";
 import Loading from "../../shared/loading";
 import { toast } from "react-toastify";
+import { Pagination } from "../../shared/Pagination";
 
 const initialData = {
   name: "",
   email: "",
   position: "",
   phone: "",
+  image: "",
 };
 
 const TeacherDash = () => {
@@ -20,20 +22,25 @@ const TeacherDash = () => {
   const [teacherId, setTeacherId] = useState();
   const [originalData, setOriginalData] = useState({});
   const [isAdding, setIsAdding] = useState(false);
-
   const [formData, setFormdata] = useState(initialData);
+  const [page, setpage] = useState(1);
+  const { data, isLoading, error } = useGetAllTeacherQuery({
+    page,
+    limit: 2,
+  });
 
-  const { data, isLoading, error } = useGetAllTeacherQuery();
   const [deleteTeacher] = useDeleteTeacherMutation();
   const [updateTeacher] = useUpdateTeacherMutation();
   const [AddTeacher] = useAddTeacherMutation();
+
+  const totalpages = data?.totalPages || 1;
   if (isLoading) {
     return <Loading />;
   }
   if (error) return <p className="p-4 text-red-600">Failed to load</p>;
   console.log(data);
 
-  const teachers = data?.data;
+  const teachers = data?.teacher;
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -73,12 +80,31 @@ const TeacherDash = () => {
       email: teacher.email,
       possition: teacher.possition,
       phone: teacher.phone,
+      image: teacher.img,
     });
     // toast.error("hey ");
+  };
+
+  const handleFileChange = (e) => {
+    setFormdata((prev) => ({
+      ...prev,
+      image: e.target.files[0],
+    }));
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isAdding) {
+      const multerData = new FormData();
+      multerData.append("name", formData.name);
+      multerData.append("email", formData.email);
+      multerData.append("position", formData.position);
+      multerData.append("phone", formData.phone);
+
+      // Image file must be appended as a file
+      if (formData.image) {
+        multerData.append("image", formData.image);
+      }
+
       try {
         const res = await AddTeacher(formData).unwrap();
         toast.success(res.message || "Teacher added successfully!!!");
@@ -89,37 +115,45 @@ const TeacherDash = () => {
       }
       return;
     }
-    const changedData = {};
+    let updatedData = new FormData();
+
     if (formData.name !== originalData.name) {
-      changedData.name == formData.name;
+      updatedData.append("name", formData.name);
     }
+
     if (formData.email !== originalData.email) {
-      changedData.email == formData.email;
+      updatedData.append("email", formData.email);
     }
+
     if (formData.position !== originalData.position) {
-      changedData.position == formData.position;
+      updatedData.append("position", formData.position);
     }
-    if (formData.position !== originalData.position) {
-      changedData.position == formData.position;
-    }
+
     if (formData.phone !== originalData.phone) {
-      changedData.phone == formData.phone;
+      updatedData.append("phone", formData.phone);
     }
-    if (Object.key(changedData).length === 0) {
-      toast.info("No change made");
+
+    // If image changed
+    if (formData.image instanceof File) {
+      updatedData.append("image", formData.image);
+    }
+
+    if ([...updatedData.keys()].length === 0) {
+      toast.info("No changes made");
       return;
     }
 
     try {
       const res = await updateTeacher({
         id: teacherId,
-        data: changedData,
-      }).unwarp();
-
-      toast.success(res.message || " update teacher succesfully");
+        data: updatedData,
+      }).unwrap();
+      console.log(res);
+      toast.success(res.message || "Teacher updated Successfully");
       setIsModalOpen(false);
     } catch (error) {
-      toast.error(error?.Data?.message || "failed to update teacher", error);
+      toast.error(error?.data?.message || "Failed to update teacher");
+      console.log(error?.message);
     }
   };
 
@@ -160,7 +194,7 @@ const TeacherDash = () => {
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {teachers.map((teacher) => (
+            {teachers?.map((teacher) => (
               <tr key={teacher.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm text-gray-800">
                   <img
@@ -201,8 +235,13 @@ const TeacherDash = () => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          totalPages={totalpages}
+          onPagechange={setpage}
+        />
 
-        {teachers.length === 0 && (
+        {teachers?.length === 0 && (
           <p className="p-4 text-center text-gray-500">No teacher data found</p>
         )}
       </div>
@@ -245,6 +284,21 @@ const TeacherDash = () => {
                 className="w-full p-2 border rounded mb-3"
                 onChange={handleChange}
               />
+              {!isAdding && formData.image ? (
+                <img
+                  src={`${import.meta.env.VITE_IMG_URL}${formData.image}`}
+                  alt={formData.name}
+                />
+              ) : null}
+
+              <input
+                type="file"
+                id="image"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required={isAdding}
+              />
+
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => setIsModalOpen(false)}

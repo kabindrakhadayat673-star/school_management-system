@@ -37,7 +37,7 @@ const Login = () => {
       const data = await res.json();
       console.log(data);
       toast.success(`${data.message}`);
-      Dispatch(setUser(data?.user.email));
+      Dispatch(setUser(data?.user));
       if (res.status === 200) {
         navigate("/dashboard");
       }

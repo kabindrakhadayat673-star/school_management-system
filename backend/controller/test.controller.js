@@ -59,6 +59,7 @@ export const login = async (req, res, next) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
       // 2.secret key
       process.env.SECRET_KEY,
@@ -73,10 +74,12 @@ export const login = async (req, res, next) => {
     // 4.SUCESS then return response
     res.status(200).json({
       message: "login Sucessful",
-      user: {
+      user:  {
         id: user.id,
-        //     name: user.name,
         email: user.email,
+        role: user.role,
+        //     name: user.name,
+
         //     token: token,
       },
     });

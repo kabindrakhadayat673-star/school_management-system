@@ -1,13 +1,19 @@
 import db from "../config/dbconnection.js";
-import { removeImg } from "../utils/removeimg.js";
+import { removeimg } from "../utils/removeimg.js";
 
 export const addTeacher = async (req, res, next) => {
+  console.log(req.user);
   try {
+    if (role !== "admin") {
+      return res.status(403).json({
+        message: "Access  denied. Admins only.",
+      });
+    }
     const { name, email, phone, position } = req.body;
 
     if (!name || !email || !phone || !position) {
       if (req.file) {
-        removeImg(req.file.path);
+        removeimg(req.file.path);
       }
       res.json({
         message: "ALL fields are required",
@@ -20,7 +26,7 @@ export const addTeacher = async (req, res, next) => {
     );
     if (exciting.length > 0) {
       if (req.file) {
-        removeImg(req.file.path);
+        removeimg(req.file.path);
       }
 
       return res.status(409).json({
@@ -34,7 +40,7 @@ export const addTeacher = async (req, res, next) => {
     );
     if (phmatch.length > 0) {
       if (req.file) {
-        removeImg(req.file.path);
+        removeimg(req.file.path);
       }
       return res.status(409).json({
         message: "phone ALREADY EXITS. USE ANOTHER phone.",
@@ -60,11 +66,31 @@ export const addTeacher = async (req, res, next) => {
 
 export const getALLTeachers = async (req, res, next) => {
   try {
-    const [getALLTeachers] = await db.execute("SELECT * FROM teacher");
+    let { page = 1, limit = 10 } = req.query;
+    page = Number(page);
+    limit = Number(limit);
+
+    const offset = (page - 1) * limit;
+
+    const [result] = await db.execute(
+      `SELECT * FROM teacher ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`
+    );
+    const [[{ total }]] = await db.execute(
+      "SELECT COUNT(*) as total FROM teacher"
+    );
     res.status(200).json({
-      data: getALLTeachers,
+      message: "All teachers get Successfully",
+      teacher: result,
+      total,
+      offset,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      remainingTeachers: total - page * limit,
     });
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deleteTeacher = async (req, res, next) => {
