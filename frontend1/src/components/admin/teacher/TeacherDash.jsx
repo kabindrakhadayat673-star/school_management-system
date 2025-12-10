@@ -8,6 +8,7 @@ import {
 import Loading from "../../shared/loading";
 import { toast } from "react-toastify";
 import { Pagination } from "../../shared/Pagination";
+import { useSelector } from "react-redux";
 
 const initialData = {
   name: "",
@@ -18,6 +19,7 @@ const initialData = {
 };
 
 const TeacherDash = () => {
+  const { role } = useSelector ((state) => state.user)
   const [isMoalOpen, setIsModalOpen] = useState(false);
   const [teacherId, setTeacherId] = useState();
   const [originalData, setOriginalData] = useState({});
@@ -106,7 +108,7 @@ const TeacherDash = () => {
       }
 
       try {
-        const res = await AddTeacher(formData).unwrap();
+        const res = await AddTeacher(multerData).unwrap();
         toast.success(res.message || "Teacher added successfully!!!");
         setFormdata(initialData);
         setIsModalOpen(false);
@@ -198,7 +200,7 @@ const TeacherDash = () => {
               <tr key={teacher.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm text-gray-800">
                   <img
-                    src={`${import.meta.env.VITE_IMG_URL}${teacher.img}`}
+                    src={`${import.meta.env.VITE_IMG_URL}/${teacher.img}`}
                     alt={teacher.img ? teacher.name : "No Image"}
                     className="w-12 h-12 object-cover"
                   />
@@ -215,8 +217,11 @@ const TeacherDash = () => {
                 <td className="px-6 py-4 text-sm text-gray-700">
                   {teacher.phone}
                 </td>
-                <td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {role ==="admin" && (
                   <div className="space-x-4">
+                  
+                    
                     <button
                       onClick={() => handleDelete(teacher)}
                       className="cursor-pointer"
@@ -230,6 +235,7 @@ const TeacherDash = () => {
                       Edit
                     </button>
                   </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -286,7 +292,7 @@ const TeacherDash = () => {
               />
               {!isAdding && formData.image ? (
                 <img
-                  src={`${import.meta.env.VITE_IMG_URL}${formData.image}`}
+                  src={`${import.meta.env.VITE_IMG_URL}/${formData.image}`}
                   alt={formData.name}
                 />
               ) : null}

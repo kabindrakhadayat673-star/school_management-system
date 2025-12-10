@@ -1,14 +1,16 @@
 import db from "../config/dbconnection.js";
 import { removeimg } from "../utils/removeimg.js";
+import { compressimg } from "../utils/sharphandler.js";
 
 export const addTeacher = async (req, res, next) => {
-  console.log(req.user);
+  const role = req.user;
+
   try {
-    if (role !== "admin") {
-      return res.status(403).json({
-        message: "Access  denied. Admins only.",
-      });
-    }
+    // if (role !== "student") {
+    //   return res.status(403).json({
+    //     message: "Access  denied. Admins only.",
+    //   });
+    // }
     const { name, email, phone, position } = req.body;
 
     if (!name || !email || !phone || !position) {
@@ -46,13 +48,17 @@ export const addTeacher = async (req, res, next) => {
         message: "phone ALREADY EXITS. USE ANOTHER phone.",
       });
     }
+    let imagepath = "";
+    if (req.file) {
+      const outputpath = `uploads/teacher/school-${req.file.filename}`;
+      await compressimg(req.file.path, outputpath);
+      imagepath = outputpath;
+    }
 
-    const img = req.file ? `uploads/teacher/${req.file.filename}` : null;
-
-    // insert teacher
+    // insert teacher with image
     await db.execute(
       "INSERT INTO teacher(name,email,phone,position,img)VALUES(?,?,?,?,?)",
-      [name, email, phone, position, img]
+      [name, email, phone, position, imagepath]
     );
     return res.status(201).json({
       message: "teacher added succesfull",
